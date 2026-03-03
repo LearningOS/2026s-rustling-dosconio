@@ -1,104 +1,58 @@
-// rc1.rs
+// box1.rs
 //
-// In this exercise, we want to express the concept of multiple owners via the
-// Rc<T> type. This is a model of our solar system - there is a Sun type and
-// multiple Planets. The Planets take ownership of the sun, indicating that they
-// revolve around the sun.
+// At compile time, Rust needs to know how much space a type takes up. This
+// becomes problematic for recursive types, where a value can have as part of
+// itself another value of the same type. To get around the issue, we can use a
+// `Box` - a smart pointer used to store data on the heap, which also allows us
+// to wrap a recursive type.
 //
-// Make this code compile by using the proper Rc primitives to express that the
-// sun has multiple owners.
+// The recursive type we're implementing in this exercise is the `cons list` - a
+// data structure frequently found in functional programming languages. Each
+// item in a cons list contains two elements: the value of the current item and
+// the next item. The last item is a value called `Nil`.
 //
-// Execute `rustlings hint rc1` or use the `hint` watch subcommand for a hint.
+// Step 1: use a `Box` in the enum definition to make the code compile
+// Step 2: create both empty and non-empty cons lists by replacing `todo!()`
+//
+// Note: the tests should not be changed
+//
+// Execute `rustlings hint box1` or use the `hint` watch subcommand for a hint.
 
-// I AM NOT DONE
+// I AM DONE
 
-use std::rc::Rc;
-
-#[derive(Debug)]
-struct Sun {}
-
-#[derive(Debug)]
-enum Planet {
-    Mercury(Rc<Sun>),
-    Venus(Rc<Sun>),
-    Earth(Rc<Sun>),
-    Mars(Rc<Sun>),
-    Jupiter(Rc<Sun>),
-    Saturn(Rc<Sun>),
-    Uranus(Rc<Sun>),
-    Neptune(Rc<Sun>),
-}
-
-impl Planet {
-    fn details(&self) {
-        println!("Hi from {:?}!", self)
-    }
+#[derive(PartialEq, Debug)]
+pub enum List {
+    Cons(i32, Box<List>),
+    Nil,
 }
 
 fn main() {
-    let sun = Rc::new(Sun {});
-    println!("reference count = {}", Rc::strong_count(&sun)); // 1 reference
+    println!("This is an empty cons list: {:?}", create_empty_list());
+    println!(
+        "This is a non-empty cons list: {:?}",
+        create_non_empty_list()
+    );
+}
 
-    let mercury = Planet::Mercury(Rc::clone(&sun));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 2 references
-    mercury.details();
+pub fn create_empty_list() -> List {
+    List::Nil
+}
 
-    let venus = Planet::Venus(Rc::clone(&sun));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 3 references
-    venus.details();
+pub fn create_non_empty_list() -> List {
+    List::Cons(0, Box::new(List::Nil))
+}
 
-    let earth = Planet::Earth(Rc::clone(&sun));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 4 references
-    earth.details();
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let mars = Planet::Mars(Rc::clone(&sun));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 5 references
-    mars.details();
+    #[test]
+    fn test_create_empty_list() {
+        assert_eq!(List::Nil, create_empty_list())
+    }
 
-    let jupiter = Planet::Jupiter(Rc::clone(&sun));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 6 references
-    jupiter.details();
-
-    // TODO
-    let saturn = Planet::Saturn(Rc::new(Sun {}));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 7 references
-    saturn.details();
-
-    // TODO
-    let uranus = Planet::Uranus(Rc::new(Sun {}));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 8 references
-    uranus.details();
-
-    // TODO
-    let neptune = Planet::Neptune(Rc::new(Sun {}));
-    println!("reference count = {}", Rc::strong_count(&sun)); // 9 references
-    neptune.details();
-
-    assert_eq!(Rc::strong_count(&sun), 9);
-
-    drop(neptune);
-    println!("reference count = {}", Rc::strong_count(&sun)); // 8 references
-
-    drop(uranus);
-    println!("reference count = {}", Rc::strong_count(&sun)); // 7 references
-
-    drop(saturn);
-    println!("reference count = {}", Rc::strong_count(&sun)); // 6 references
-
-    drop(jupiter);
-    println!("reference count = {}", Rc::strong_count(&sun)); // 5 references
-
-    drop(mars);
-    println!("reference count = {}", Rc::strong_count(&sun)); // 4 references
-
-    // TODO
-    println!("reference count = {}", Rc::strong_count(&sun)); // 3 references
-
-    // TODO
-    println!("reference count = {}", Rc::strong_count(&sun)); // 2 references
-
-    // TODO
-    println!("reference count = {}", Rc::strong_count(&sun)); // 1 reference
-
-    assert_eq!(Rc::strong_count(&sun), 1);
+    #[test]
+    fn test_create_non_empty_list() {
+        assert_ne!(create_empty_list(), create_non_empty_list())
+    }
 }
